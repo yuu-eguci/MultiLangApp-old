@@ -19,7 +19,7 @@ I might clone it again only if I got something to be tried with ASP.NET MVC.
 - Tests: unit test は未導入です。CI (`.github/workflows/build.yml`) では Windows 上で次を確認します
     - NuGet restore で脆弱性の警告 (NU1901〜NU1904) が出ないこと
     - `tools/Test-Dependencies.ps1`: `packages.config`・csproj・配信ファイルの version がそろっていること
-    - build と、IIS Express でページと bundle が表示できること (`tools/Test-Smoke.ps1`)
+    - build と、IIS Express でページと bundle が表示でき、log4net がログを書くこと (`tools/Test-Smoke.ps1`)
 
 ## パッと実行してみたい
 

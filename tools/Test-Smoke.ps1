@@ -17,6 +17,7 @@ function Assert-PageText([string]$text, [string]$expected, [string]$what) {
     Write-Host "OK: $what contains '$expected'"
 }
 
+$started = Get-Date
 $server = Start-Process $iisExpress -ArgumentList "/path:$site", "/port:$Port" -PassThru -RedirectStandardOutput $log
 try {
     $deadline = (Get-Date).AddSeconds(60)
@@ -31,6 +32,14 @@ try {
     # The localized resources are the point of this sample.
     Assert-PageText $en.Content 'This is MultiLangApp' 'English page'
     Assert-PageText (Get-Page '/' 'ja').Content 'これは MultiLangApp だよ' 'Japanese page'
+
+    # HomeController.Index writes an access log through log4net (Log4net.Debug/Release.config).
+    $logDirs = (Join-Path $site 'my-log4net-log'), (Join-Path $site '..\..\LogFiles')
+    $written = Get-ChildItem $logDirs -File -Recurse -Force -ErrorAction SilentlyContinue |
+        Where-Object LastWriteTime -ge $started |
+        Select-String -Pattern 'This is the asscess log' -SimpleMatch -List
+    if (-not $written) { throw 'log4net did not write the access log' }
+    Write-Host "OK: log4net wrote $($written[0].Path)"
 
     # Every script and stylesheet the page references is served.
     $assets = [regex]::Matches($en.Content, '(?:src|href)="(/(?:Scripts|Content)/[^"]+)"') | ForEach-Object { $_.Groups[1].Value }
