@@ -28,8 +28,9 @@
         </button>
         <p id="foo"></p>
         <script>
+            @* Razor's "@" encodes for HTML, which is wrong inside JavaScript. Encode the resource as a JavaScript string literal instead. *@
             var showText = function () {
-                $('#foo').text('@MultiLangApp.Resources.Lang.Localize.String5')
+                $('#foo').text(@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(MultiLangApp.Resources.Lang.Localize.String5, true)))
             }
         </script>
     </div>
