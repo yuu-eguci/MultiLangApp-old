@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /MultiLangApp
+    schedule:
+      interval: monthly
+    # Security update PRs only. A version update would change packages.config alone,
+    # which tools/Test-Dependencies.ps1 rejects because Scripts/, Content/ and the csproj stay old.
+    open-pull-requests-limit: 0
+    # The views use Bootstrap 3, and Bootstrap 3 requires jQuery < 4.
+    # Explicit versions are needed: security updates skip update-types. Alerts are still shown.
+    ignore:
+      - dependency-name: bootstrap
+        versions: ["[4.0.0,)"]
+      - dependency-name: jQuery
+        versions: ["[4.0.0,)"]
