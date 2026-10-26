@@ -10,11 +10,27 @@ I might clone it again only if I got something to be tried with ASP.NET MVC.
 
 ![](media/media.png)
 
-## Problems left
+## 使用技術
 
-It has the problem that the project doesn't have enough bin files after the clone. This is because the dependencies written in packages.config are different from them in Web.config.
+- Runtime: .NET Framework 4.7.2、ASP.NET MVC 5.2.4 (Windows 専用)
+- Packages: NuGet `packages.config` (`packages/` へ復元し、commit しません)
+- Docker: 非対応です。ASP.NET MVC 5 on .NET Framework は Windows / IIS が必要です
+- Linter: 未導入です
+- Tests: 未導入です。CI (`.github/workflows/build.yml`) では Windows 上で package を復元して build します
 
-- **Microsoft.AspNet.Mvc** is written in packages.config and that will be actually installed.
-- While Web.config requires **System.Web.Mvc**, which doesn't exist. And the build fails.
+## パッと実行してみたい
 
-To resolve that, this project's git includes bin folder. I know that bizzare but no other ideas. What's wrong with you ASP.NET MVC?
+Windows に Visual Studio 2022 以降 (ASP.NET と Web 開発 workload) を入れ、次のコマンドを実行します。
+
+```
+nuget restore MultiLangApp.sln
+msbuild MultiLangApp.sln /p:Configuration=Release
+```
+
+`MultiLangApp.sln` を開いて F5 (IIS Express) を押しても実行できます。Package は自動で復元されます。
+
+画面の言語は browser の `Accept-Language` に従います。`en` なら英語 (`Localize.en.resx`)、それ以外なら日本語 (`Localize.resx`) を表示します。
+
+## bin folder について
+
+以前は clone 後の build が失敗するため、bin folder を commit していました。原因は `packages.config` が空で、csproj の `..\packages\` HintPath に必要な package を NuGet restore が導入できないことでした。現在は `packages.config` に必要な package を記載し、bin folder を build の生成物として扱います。

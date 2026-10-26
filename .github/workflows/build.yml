@@ -1,0 +1,19 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # .NET Framework 4.7.2 + ASP.NET MVC 5 builds only on Windows.
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v7
+      - uses: microsoft/setup-msbuild@v3
+      - run: nuget restore MultiLangApp.sln
+      - run: msbuild MultiLangApp.sln /p:Configuration=Release /m
