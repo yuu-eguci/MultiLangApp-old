@@ -20,7 +20,7 @@ I might clone it again only if I got something to be tried with ASP.NET MVC.
 
 ## パッと実行してみたい
 
-Windows に Visual Studio 2022 (ASP.NET と Web 開発 workload) を入れ、次のコマンドを実行します。
+Windows に Visual Studio 2022 以降 (ASP.NET と Web 開発 workload) を入れ、次のコマンドを実行します。
 
 ```
 nuget restore MultiLangApp.sln
