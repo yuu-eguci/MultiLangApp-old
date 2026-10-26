@@ -19,7 +19,8 @@ I might clone it again only if I got something to be tried with ASP.NET MVC.
 - Tests: unit test は未導入です。CI (`.github/workflows/build.yml`) では Windows 上で次を確認します
     - NuGet restore で脆弱性の警告 (NU1901〜NU1904) が出ないこと
     - `tools/Test-Dependencies.ps1`: `packages.config`・csproj・配信ファイルの version がそろっていること
-    - build と、IIS Express でページと bundle が表示でき、log4net がログを書くこと (`tools/Test-Smoke.ps1`)
+    - build と、IIS Express でページと bundle が表示でき、log4net が日付名のファイルにログを書くこと (`tools/Test-Smoke.ps1`)
+    - Release 用の Web.config transform で `debug` が外れること (`tools/Test-ReleaseConfig.ps1`)
 
 ## パッと実行してみたい
 
@@ -33,6 +34,14 @@ msbuild MultiLangApp.sln /p:Configuration=Release
 `MultiLangApp.sln` を開いて F5 (IIS Express) を押しても実行できます。Package は自動で復元されます。
 
 画面の言語は browser の `Accept-Language` に従います。`en` なら英語 (`Localize.en.resx`)、それ以外なら日本語 (`Localize.resx`) を表示します。
+
+## Debug と Release の設定
+
+- `Web.config` は手元で F5 debug できるよう `debug="true"` のままです。publish 時に `Web.Release.config` の transform が `debug` を外します。transform は build では適用されません。
+- log4net の設定ファイルは `Properties/AssemblyInfo.cs` の `XmlConfigurator` が build 構成で選びます。`Web.config` に log4net の設定は不要です。
+    - Debug: `Log4net.Debug.config` → `my-log4net-log/yyyy-MM-dd.log`
+    - Release: `Log4net.Release.config` → `../../LogFiles/my-log4net-azure-log/yyyy-MM-dd.log` (Azure App Service では `D:\home\LogFiles` の下)
+- アクセスログには表示言語 (`CurrentUICulture`) だけを書き、client IP address は残しません。
 
 ## bin folder について
 
