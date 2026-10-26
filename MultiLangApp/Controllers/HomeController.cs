@@ -12,8 +12,8 @@ namespace MultiLangApp.Controllers
 
         public ActionResult Index()
         {
-            logger.Info("This is the asscess log! "
-                        + "From " + System.Web.HttpContext.Current.Request.UserHostAddress + ". "
+            // Client IP addresses are personal data, so the access log keeps only the culture.
+            logger.Info("This is the access log! "
                         + "CurrentUICulture: " + System.Threading.Thread.CurrentThread.CurrentUICulture);
 
             // 手動で CurrentUICulture を切り替える場合の記述。

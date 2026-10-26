@@ -37,7 +37,8 @@ using System.Runtime.InteropServices;
 // Setting file for log4net.
 // Without specifying ConfigFile manually, it refers Web.config.
 // Either uppercase and lowercase are accepted. (Log4net.config, log4net.config)
-// I don't know why but 'Log4net.config' must be written in either this AssemblyInfo.cs and Web.config. WHY?
+// This attribute is the only place that configures log4net, so Web.config needs no log4net section.
+// The build configuration picks the file: Debug builds use Log4net.Debug.config, Release builds Log4net.Release.config.
 #if DEBUG
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "Log4net.Debug.config", Watch = true)]
 #else

@@ -33,13 +33,18 @@ try {
     Assert-PageText $en.Content 'This is MultiLangApp' 'English page'
     Assert-PageText (Get-Page '/' 'ja').Content 'これは MultiLangApp だよ' 'Japanese page'
 
-    # HomeController.Index writes an access log through log4net (Log4net.Debug/Release.config).
-    $logDirs = (Join-Path $site 'my-log4net-log'), (Join-Path $site '..\..\LogFiles')
-    $written = Get-ChildItem $logDirs -File -Recurse -Force -ErrorAction SilentlyContinue |
+    # HomeController.Index writes an access log through log4net. Properties/AssemblyInfo.cs picks
+    # Log4net.Debug.config or Log4net.Release.config; both name the file yyyy-MM-dd.log.
+    $logDirs = (Join-Path $site 'my-log4net-log'), (Join-Path $site '..\..\LogFiles\my-log4net-azure-log')
+    $written = Get-ChildItem $logDirs -File -Force -ErrorAction SilentlyContinue |
         Where-Object LastWriteTime -ge $started |
-        Select-String -Pattern 'This is the asscess log' -SimpleMatch -List
+        Select-String -Pattern 'CurrentUICulture:' -SimpleMatch
     if (-not $written) { throw 'log4net did not write the access log' }
-    Write-Host "OK: log4net wrote $($written[0].Path)"
+    foreach ($entry in $written) {
+        if ($entry.Filename -notmatch '^\d{4}-\d{2}-\d{2}\.log$') { throw "Log file is not named yyyy-MM-dd.log: $($entry.Path)" }
+        if ($entry.Line -match '\b\d{1,3}(\.\d{1,3}){3}\b|::1') { throw "Access log contains a client IP address: $($entry.Line)" }
+    }
+    Write-Host "OK: log4net wrote $($written[0].Path) without client IP addresses"
 
     # Every script and stylesheet the page references is served.
     $assets = [regex]::Matches($en.Content, '(?:src|href)="(/(?:Scripts|Content)/[^"]+)"') | ForEach-Object { $_.Groups[1].Value }

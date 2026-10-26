@@ -25,3 +25,5 @@ jobs:
       - run: ./tools/Test-Dependencies.ps1
       - run: msbuild MultiLangApp.sln /p:Configuration=Release /m
       - run: ./tools/Test-Smoke.ps1
+      # Runs after the smoke test so the transformed Web.config under obj/ does not exist while IIS Express serves the site.
+      - run: ./tools/Test-ReleaseConfig.ps1
