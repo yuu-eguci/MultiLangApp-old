@@ -21,6 +21,7 @@ I might clone it again only if I got something to be tried with ASP.NET MVC.
     - `tools/Test-Dependencies.ps1`: `packages.config`・csproj・配信ファイルの version がそろっていること
     - build と、IIS Express でページと bundle が表示でき、log4net が日付名のファイルにログを書くこと (`tools/Test-Smoke.ps1`)
     - 同じ smoke test で、ボタンを押したときの JavaScript の文言が日英とも resource の値どおりになること (Node.js で実行します)
+    - 同じ smoke test で、version を示す response header が出ず、`X-Content-Type-Options: nosniff` が付くこと
     - Release 用の Web.config transform で `debug` が外れること (`tools/Test-ReleaseConfig.ps1`)
 
 ## パッと実行してみたい
@@ -46,6 +47,7 @@ JavaScript に resource の文字列を渡すときは、Razor の既定の HTML
     - Release: `Log4net.Release.config` → `../../LogFiles/my-log4net-azure-log/yyyy-MM-dd.log` (Azure App Service では `D:\home\LogFiles` の下)
     - どちらも 1 日 1 ファイルで、古いファイルは log4net が削除しないため増え続けます。必要に応じて手動で削除します。
 - アクセスログには表示言語 (`CurrentUICulture`) だけを書き、client IP address は残しません。
+- response には ASP.NET・MVC の version を示す header (`X-AspNet-Version`・`X-AspNetMvc-Version`・`X-Powered-By`) を出さず、`X-Content-Type-Options: nosniff` を付けます。CSP と HSTS は inline script と手元の HTTP 開発に合わないため、付けていません。
 
 ## bin folder について
 

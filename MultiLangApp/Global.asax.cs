@@ -12,6 +12,8 @@ namespace MultiLangApp
     {
         protected void Application_Start()
         {
+            // Stops the X-AspNetMvc-Version header (see also httpRuntime and customHeaders in Web.config).
+            MvcHandler.DisableMvcResponseHeader = true;
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);

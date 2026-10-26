@@ -17,6 +17,20 @@ function Assert-PageText([string]$text, [string]$expected, [string]$what) {
     Write-Host "OK: $what contains '$expected'"
 }
 
+# Version headers only help fingerprinting. nosniff makes browsers trust Content-Type,
+# so scripts and stylesheets must also be served with their real type.
+$script:headerChecks = 0
+function Assert-SafeResponse($response, [string]$what, [string]$expectedType) {
+    foreach ($name in 'X-AspNet-Version', 'X-AspNetMvc-Version', 'X-Powered-By') {
+        if ($response.Headers.ContainsKey($name)) { throw "$what sends ${name}: $($response.Headers[$name])" }
+    }
+    $nosniff = "$($response.Headers['X-Content-Type-Options'])"
+    if ($nosniff -ne 'nosniff') { throw "$what sends X-Content-Type-Options '$nosniff', expected 'nosniff'" }
+    $type = "$($response.Headers['Content-Type'])"
+    if (-not $type.Contains($expectedType)) { throw "$what is served as '$type', expected '$expectedType'" }
+    $script:headerChecks++
+}
+
 function Get-Resource([string]$file, [string]$name) {
     $resx = [xml](Get-Content (Join-Path $site "Resources\Lang\$file") -Raw -Encoding utf8)
     ($resx.root.data | Where-Object name -eq $name).value
@@ -56,6 +70,7 @@ try {
 
     # The localized resources are the point of this sample.
     Assert-PageText $en.Content 'This is MultiLangApp' 'English page'
+    Assert-SafeResponse $en '/' 'text/html'
     Assert-PageText (Get-Page '/' 'ja').Content 'これは MultiLangApp だよ' 'Japanese page'
 
     # The button text set from JavaScript must be the resource value itself, not HTML-encoded.
@@ -83,16 +98,19 @@ try {
     $assets = [regex]::Matches($en.Content, '(?:src|href)="(/(?:Scripts|Content)/[^"]+)"') | ForEach-Object { $_.Groups[1].Value }
     if (-not $assets) { throw 'The page references no files under /Scripts or /Content' }
     foreach ($asset in $assets) {
-        Get-Page $asset | Out-Null
+        Assert-SafeResponse (Get-Page $asset) $asset ($asset.EndsWith('.css') ? 'text/css' : 'javascript')
         Write-Host "OK: $asset"
     }
 
     # Bundles go through the minifier (WebGrease) and report failures inside the response body.
     foreach ($bundle in '/bundles/jquery', '/bundles/jqueryval', '/bundles/bootstrap', '/bundles/modernizr', '/Content/css') {
-        $body = (Get-Page $bundle).Content
+        $response = Get-Page $bundle
+        $body = $response.Content
         if ($body.Length -eq 0 -or $body.Contains('Minification failed')) { throw "$bundle is empty or failed to minify" }
+        Assert-SafeResponse $response $bundle ($bundle -eq '/Content/css' ? 'text/css' : 'javascript')
         Write-Host "OK: $bundle ($($body.Length) chars)"
     }
+    Write-Host "OK: $script:headerChecks responses send no version headers, send nosniff and have matching content types"
 }
 finally {
     Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
