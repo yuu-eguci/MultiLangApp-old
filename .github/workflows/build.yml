@@ -15,5 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: microsoft/setup-msbuild@v3
-      - run: nuget restore MultiLangApp.sln
+      - name: Restore packages (fails on NuGet vulnerability warnings)
+        run: |
+          nuget restore MultiLangApp.sln 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/restore.log"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          if (Select-String -Path "$env:RUNNER_TEMP/restore.log" -Pattern 'NU190[1-4]' -Quiet) {
+            throw 'NuGet reported vulnerable packages (NU1901-NU1904 above)'
+          }
+      - run: ./tools/Test-Dependencies.ps1
       - run: msbuild MultiLangApp.sln /p:Configuration=Release /m
+      - run: ./tools/Test-Smoke.ps1
