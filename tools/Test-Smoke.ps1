@@ -17,6 +17,31 @@ function Assert-PageText([string]$text, [string]$expected, [string]$what) {
     Write-Host "OK: $what contains '$expected'"
 }
 
+function Get-Resource([string]$file, [string]$name) {
+    $resx = [xml](Get-Content (Join-Path $site "Resources\Lang\$file") -Raw -Encoding utf8)
+    ($resx.root.data | Where-Object name -eq $name).value
+}
+
+# Runs the inline script of the page in Node with a stub jQuery and returns the text showText() sets.
+function Get-ShownText([string]$html) {
+    $script = [regex]::Matches($html, '<script>([\s\S]*?)</script>') |
+        ForEach-Object { $_.Groups[1].Value } | Where-Object { $_.Contains('showText') } | Select-Object -First 1
+    if (-not $script) { throw 'The page has no inline script with showText' }
+    $scriptFile = New-TemporaryFile
+    $runnerFile = Join-Path ([IO.Path]::GetTempPath()) 'show-text.js'
+    Set-Content $scriptFile $script -Encoding utf8 -NoNewline
+    Set-Content $runnerFile -Encoding utf8 -Value @'
+const vm = require('vm');
+let shown;
+vm.runInNewContext(require('fs').readFileSync(process.argv[2], 'utf8') + '\n;showText();',
+    { $: () => ({ text: (value) => { shown = value; } }) });
+process.stdout.write(Buffer.from(String(shown), 'utf8').toString('base64'));
+'@
+    $base64 = node $runnerFile $scriptFile
+    if ($LASTEXITCODE) { throw "The inline script failed in Node:`n$script" }
+    [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($base64))
+}
+
 $started = Get-Date
 $server = Start-Process $iisExpress -ArgumentList "/path:$site", "/port:$Port" -PassThru -RedirectStandardOutput $log
 try {
@@ -32,6 +57,14 @@ try {
     # The localized resources are the point of this sample.
     Assert-PageText $en.Content 'This is MultiLangApp' 'English page'
     Assert-PageText (Get-Page '/' 'ja').Content 'これは MultiLangApp だよ' 'Japanese page'
+
+    # The button text set from JavaScript must be the resource value itself, not HTML-encoded.
+    foreach ($case in @{ Language = 'en'; Resx = 'Localize.en.resx' }, @{ Language = 'ja'; Resx = 'Localize.resx' }) {
+        $expected = Get-Resource $case.Resx 'String5'
+        $shown = Get-ShownText (Get-Page '/' $case.Language).Content
+        if ($shown -cne $expected) { throw "showText() ($($case.Language)) shows '$shown', expected '$expected'" }
+        Write-Host "OK: showText() ($($case.Language)) shows '$shown'"
+    }
 
     # HomeController.Index writes an access log through log4net. Properties/AssemblyInfo.cs picks
     # Log4net.Debug.config or Log4net.Release.config; both name the file yyyy-MM-dd.log.
