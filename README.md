@@ -54,4 +54,6 @@ JavaScript に resource の文字列を渡すときは、Razor の既定の HTML
 
 `packages.config` の version を上げるだけでは、`Scripts/`・`Content/`・`fonts/` の配信ファイルと csproj の参照は変わりません。package を更新するときは、この 3 つを一緒に更新します。ずれていると `tools/Test-Dependencies.ps1` が失敗します。package を復元したあと `pwsh tools/Test-Dependencies.ps1` を実行すると、手元でも確認できます。
 
+Dependabot (`.github/dependabot.yml`) は security update の PR だけを作り、version update の PR は作りません。Dependabot の PR は `packages.config` だけを変えることがあり、そのときは `tools/Test-Dependencies.ps1` が失敗します。PR を参考に配信ファイルと csproj を手でそろえてください。Bootstrap 3 の画面に合わない Bootstrap 4 以上と、Bootstrap 3 が対応していない jQuery 4 以上は PR にしません。脆弱性の alert は通常どおり表示されます。
+
 「既知のリスク」Bootstrap 3 は 2019 年にサポートが終了しています。最終版の 3.4.1 にも、修正版のない CVE-2024-6485 (button の `data-loading-text` の XSS) が残ります。このサンプルは button の loading 機能を使っていません。Bootstrap 5 への移行は画面の書き換えが必要なので、行っていません。
