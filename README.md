@@ -44,6 +44,7 @@ JavaScript に resource の文字列を渡すときは、Razor の既定の HTML
 - log4net の設定ファイルは `Properties/AssemblyInfo.cs` の `XmlConfigurator` が build 構成で選びます。`Web.config` に log4net の設定は不要です。
     - Debug: `Log4net.Debug.config` → `my-log4net-log/yyyy-MM-dd.log`
     - Release: `Log4net.Release.config` → `../../LogFiles/my-log4net-azure-log/yyyy-MM-dd.log` (Azure App Service では `D:\home\LogFiles` の下)
+    - どちらも 1 日 1 ファイルで、古いファイルは log4net が削除しないため増え続けます。必要に応じて手動で削除します。
 - アクセスログには表示言語 (`CurrentUICulture`) だけを書き、client IP address は残しません。
 
 ## bin folder について
