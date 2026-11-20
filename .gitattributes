@@ -67,6 +67,7 @@
 #
 # Third-party file from the NuGet jQuery 3.7.1 package. Linguist's built-in
 # vendor patterns do not match the ".slim" file name, so mark it explicitly.
+# Update this path when the jQuery package version changes.
 # Other bundled libraries are already excluded by Linguist automatically.
 ###############################################################################
 MultiLangApp/Scripts/jquery-3.7.1.slim.js linguist-vendored
